@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thời tiết Việt Nam</title>
-<link rel="manifest" href="manifest.json">
+<title>Thời tiết Việt Nam & AI Chat</title>
 <style>
 :root {
     --bg-light: #e0f7fa;
@@ -12,40 +11,28 @@
     --text-light: #000;
     --text-dark: #fff;
 }
-body {
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
-    transition: background-color 0.3s, color 0.3s;
-}
-body.light { background-color: var(--bg-light); color: var(--text-light); }
-body.dark { background-color: var(--bg-dark); color: var(--text-dark); }
-
-.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-header { text-align: center; margin-bottom: 20px; }
-header h1 { margin-bottom: 10px; }
-.datetime { font-size: 1.1em; margin-bottom: 10px; }
-button { padding: 10px 15px; margin: 5px; border: none; border-radius: 10px; cursor: pointer; }
-button:hover { opacity: 0.8; }
-
-.weather-container { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
-.weather-card { flex: 1 1 300px; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 15px; border-radius: 15px; text-align: center; min-width: 280px; }
-.weather-card iframe { width: 100%; height: 300px; border: none; border-radius: 10px; }
-
-.sound-controls, .chat-container { text-align: center; margin-top: 10px; }
-.chat-box { max-width: 500px; margin: 0 auto; padding: 10px; border: 1px solid #ccc; border-radius: 10px; height: 300px; overflow-y: auto; background: rgba(255,255,255,0.1); }
-.chat-input { width: 70%; padding: 10px; margin-top: 5px; border-radius: 10px; border: 1px solid #ccc; }
-.chat-send { padding: 10px 15px; margin-left: 5px; border-radius: 10px; cursor: pointer; }
-
-.chat-message { margin: 5px 0; padding: 5px 10px; border-radius: 10px; display: inline-block; max-width: 80%; }
-.chat-user { background: #00bcd4; color: #fff; text-align: right; float: right; clear: both; }
-.chat-ai { background: #4caf50; color: #fff; text-align: left; float: left; clear: both; }
+body { font-family: 'Segoe UI', sans-serif; margin:0; padding:0; transition: background-color 0.3s, color 0.3s;}
+body.light { background-color: var(--bg-light); color: var(--text-light);}
+body.dark { background-color: var(--bg-dark); color: var(--text-dark);}
+.container { max-width: 1000px; margin:0 auto; padding:20px;}
+header { text-align:center; margin-bottom:20px;}
+header h1 { margin-bottom:10px;}
+.datetime { font-size:1.1em; margin-bottom:10px;}
+button { padding:10px 15px; margin:5px; border:none; border-radius:10px; cursor:pointer;}
+button:hover { opacity:0.8;}
+.weather-container, .chat-container { margin-top:20px; }
+.weather-widget { width:100%; height:400px; border:none; border-radius:10px; margin-top:10px;}
+.chat-box { width:100%; height:200px; border:1px solid #ccc; border-radius:10px; padding:10px; overflow-y:auto; background:rgba(255,255,255,0.2);}
+.chat-input { width:calc(100% - 110px); padding:10px; border-radius:10px; border:1px solid #ccc; }
+.chat-send { padding:10px 15px; border:none; border-radius:10px; cursor:pointer; margin-left:5px;}
+.sound-controls { text-align:center; margin-top:10px;}
+.select-province { padding:10px; border-radius:10px; border:1px solid #ccc; width:100%; margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>🌧️ Thời tiết Việt Nam + AI Chat</h1>
+        <h1>Thời tiết Việt Nam & AI Chat</h1>
         <div class="datetime">
             <span id="time"></span> | <span id="date"></span>
         </div>
@@ -53,103 +40,112 @@ button:hover { opacity: 0.8; }
     </header>
 
     <main>
-        <!-- Âm thanh -->
         <div class="sound-controls">
             <button data-sound="rain">Mưa</button>
             <button data-sound="thunder">Sấm</button>
             <button data-sound="cicada">Ve</button>
-            <button id="toggle-sound">Bật/Tắt âm thanh</button>
+            <button id="stop-sound">Dừng âm thanh</button>
         </div>
 
-        <!-- Weather widgets -->
-        <div class="weather-container" id="weather-container"></div>
+        <div class="weather-container">
+            <select id="province-select" class="select-province"></select>
+            <iframe id="weather-widget" class="weather-widget"></iframe>
+        </div>
 
-        <!-- AI Chat -->
         <div class="chat-container">
-            <h2>AI Chat</h2>
             <div class="chat-box" id="chat-box"></div>
-            <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn...">
-            <button id="chat-send" class="chat-send">Gửi</button>
+            <div style="display:flex; margin-top:10px;">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Nhập câu hỏi của bạn...">
+                <button id="chat-send" class="chat-send">Gửi</button>
+            </div>
         </div>
     </main>
 </div>
 
 <script>
-// Danh sách 63 tỉnh thành Việt Nam với widget
-const regions = [
-{ id:'HaGiang', name:'Hà Giang', src:'https://thoitiet.vn/embed/jdiakujaz?days=5' },
-{ id:'CaoBang', name:'Cao Bằng', src:'https://thoitiet.vn/embed/gqclguzxv?days=5' },
-{ id:'BacKan', name:'Bắc Kạn', src:'https://thoitiet.vn/embed/xgtqruwqo?days=5' },
-{ id:'TuyenQuang', name:'Tuyên Quang', src:'https://thoitiet.vn/embed/bjhrzuvxy?days=5' },
-{ id:'LaoCai', name:'Lào Cai', src:'https://thoitiet.vn/embed/yvsapulmz?days=5' },
-{ id:'DienBien', name:'Điện Biên', src:'https://thoitiet.vn/embed/apfgdujwm?days=5' },
-{ id:'LaiChau', name:'Lai Châu', src:'https://thoitiet.vn/embed/kjukluxvq?days=5' },
-{ id:'SonLa', name:'Sơn La', src:'https://thoitiet.vn/embed/wzipduxgk?days=5' },
-{ id:'YenBai', name:'Yên Bái', src:'https://thoitiet.vn/embed/pqckbugqa?days=5' },
-{ id:'HoaBinh', name:'Hoà Bình', src:'https://thoitiet.vn/embed/qatywuaxk?days=5' },
-{ id:'ThaiNguyen', name:'Thái Nguyên', src:'https://thoitiet.vn/embed/zrhkluoyk?days=5' },
-{ id:'LangSon', name:'Lạng Sơn', src:'https://thoitiet.vn/embed/rospyuvol?days=5' },
-{ id:'BacGiang', name:'Bắc Giang', src:'https://thoitiet.vn/embed/mpupguvkp?days=5' },
-{ id:'PhuTho', name:'Phú Thọ', src:'https://thoitiet.vn/embed/lmiwrubyp?days=5' },
-{ id:'VinhPhuc', name:'Vĩnh Phúc', src:'https://thoitiet.vn/embed/obqcxquzkp?days=5' },
-{ id:'BacNinh', name:'Bắc Ninh', src:'https://thoitiet.vn/embed/vxxtypubzd?days=5' },
-{ id:'HaNam', name:'Hà Nam', src:'https://thoitiet.vn/embed/ygviapulmz?days=5' },
-{ id:'NamDinh', name:'Nam Định', src:'https://thoitiet.vn/embed/aqpcgdujwm?days=5' },
-{ id:'ThaiBinh', name:'Thái Bình', src:'https://thoitiet.vn/embed/bzjurzuvxy?days=5' },
-{ id:'NinhBinh', name:'Ninh Bình', src:'https://thoitiet.vn/embed/kmjtkluxvq?days=5' },
-{ id:'HaNoi', name:'🎖️Hà Nội', src:'https://thoitiet.vn/embed/vxuypubzd?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
-{ id:'HaiPhong', name:'Hải Phòng', src:'https://thoitiet.vn/embed/gaqslguzxv?days=5' },
-{ id:'QuangNinh', name:'Quảng Ninh', src:'https://thoitiet.vn/embed/dpfrouayq?days=5' },
-{ id:'HaiDuong', name:'Hải Dương', src:'https://thoitiet.vn/embed/jpdhakujaz?days=5' },
-{ id:'HungYen', name:'Hưng Yên', src:'https://thoitiet.vn/embed/dpfrouayq?days=5' },
-{ id:'ThaiBinh', name:'Thái Bình', src:'https://thoitiet.vn/embed/bzjurzuvxy?days=5' },
-{ id:'NamDinh', name:'Nam Định', src:'https://thoitiet.vn/embed/aqpcgdujwm?days=5' },
-{ id:'NinhBinh', name:'Ninh Bình', src:'https://thoitiet.vn/embed/kmjtkluxvq?days=5' },
-{ id:'ThanhHoa', name:'Thanh Hóa', src:'https://thoitiet.vn/embed/xyz123?days=5' },
-{ id:'NgheAn', name:'Nghệ An', src:'https://thoitiet.vn/embed/xyz456?days=5' },
-{ id:'HaTinh', name:'Hà Tĩnh', src:'https://thoitiet.vn/embed/xyz789?days=5' },
-{ id:'QuangBinh', name:'Quảng Bình', src:'https://thoitiet.vn/embed/zjrukluoyk?days=5' },
-{ id:'QuangTri', name:'Quảng Trị', src:'https://thoitiet.vn/embed/rboipyuvol?days=5' },
-{ id:'ThuaThienHue', name:'Thừa Thiên Huế', src:'https://thoitiet.vn/embed/dzpcrouayq?days=5' },
-{ id:'DaNang', name:'Đà Nẵng', src:'https://thoitiet.vn/embed/mlptpguvkp?days=5' },
-{ id:'QuangNam', name:'Quảng Nam', src:'https://thoitiet.vn/embed/lzmhwrubyp?days=5' },
-{ id:'QuangNgai', name:'Quảng Ngãi', src:'https://thoitiet.vn/embed/ovqsxquzkp?days=5' },
-{ id:'BinhDinh', name:'Bình Định', src:'https://thoitiet.vn/embed/voxfypubzd?days=5' },
-{ id:'PhuYen', name:'Phú Yên', src:'https://thoitiet.vn/embed/jdduakujaz?days=5' },
-{ id:'KhanhHoa', name:'Khánh Hòa', src:'https://thoitiet.vn/embed/xyz101?days=5' },
-{ id:'GiaLai', name:'Gia Lai', src:'https://thoitiet.vn/embed/ajpsgdujwm?days=5' },
-{ id:'KonTum', name:'Kon Tum', src:'https://thoitiet.vn/embed/ylvhapulmz?days=5' },
-{ id:'DakLak', name:'Đắk Lắk', src:'https://thoitiet.vn/embed/kdjfkluxvq?days=5' },
-{ id:'DakNong', name:'Đắk Nông', src:'https://thoitiet.vn/embed/wozupduxgk?days=5' },
-{ id:'LamDong', name:'Lâm Đồng', src:'https://thoitiet.vn/embed/pjqikbugqa?days=5' },
-{ id:'BinhPhuoc', name:'Bình Phước', src:'https://thoitiet.vn/embed/qjacywuaxk?days=5' },
-{ id:'BinhDuong', name:'Bình Dương', src:'https://thoitiet.vn/embed/rdohpyuvol?days=5' },
-{ id:'DongNai', name:'Đồng Nai', src:'https://thoitiet.vn/embed/dapsrouayq?days=5' },
-{ id:'BaRiaVungTau', name:'Bà Rịa - Vũng Tàu', src:'https://thoitiet.vn/embed/mrpfpguvkp?days=5' },
-{ id:'HoChiMinh', name:'Hồ Chí Minh', src:'https://thoitiet.vn/embed/lxmuwrubyp?days=5' },
-{ id:'TayNinh', name:'Tây Ninh', src:'https://thoitiet.vn/embed/zprtkluoyk?days=5' },
-{ id:'BinhThuan', name:'Bình Thuận', src:'https://thoitiet.vn/embed/bpjtrzuvxy?days=5' },
-{ id:'LongAn', name:'Long An', src:'https://thoitiet.vn/embed/okqixquzkp?days=5' },
-{ id:'TienGiang', name:'Tiền Giang', src:'https://thoitiet.vn/embed/vvxcypubzd?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
-{ id:'BenTre', name:'Bến Tre', src:'https://thoitiet.vn/embed/jodtakujaz?days=5' },
-{ id:'TraVinh', name:'Trà Vinh', src:'https://thoitiet.vn/embed/gqqhlguzxv?days=5' },
-{ id:'VinhLong', name:'Vĩnh Long', src:'https://thoitiet.vn/embed/xkgsqruwqo?days=5' },
-{ id:'SocTrang', name:'Sóc Trăng', src:'https://thoitiet.vn/embed/pwqhkbugqa?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
-{ id:'CanTho', name:'Cần Thơ', src:'https://thoitiet.vn/embed/kajckluxvq?days=5' },
-{ id:'HauGiang', name:'Hậu Giang', src:'https://thoitiet.vn/embed/waztpduxgk?days=5' },
-{ id:'KienGiang', name:'Kiên Giang', src:'https://thoitiet.vn/embed/aypigdujwm?days=5' },
-{ id:'CaMau', name:'Cà Mau', src:'https://thoitiet.vn/embed/zdrfkluoyk?days=5' }
-];
+// 63 tỉnh với widget từ thoitiet.vn
 
-const weatherContainer = document.getElementById('weather-container');
-regions.forEach(region=>{
-    const card = document.createElement('div');
-    card.className = 'weather-card';
-    card.innerHTML = `<h3>${region.name}</h3><iframe src="${region.src}" frameborder="0"></iframe>`;
-    weatherContainer.appendChild(card);
+  const regions = [
+    { id:'TraVinh', name:'Trà Vinh', src:'https://thoitiet.vn/embed/gqqhlguzxv?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'VinhLong', name:'Vĩnh Long', src:'https://thoitiet.vn/embed/xkgsqruwqo?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BenTre', name:'Bến Tre', src:'https://thoitiet.vn/embed/jodtakujaz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'CanTho', name:'Cần Thơ', src:'https://thoitiet.vn/embed/kajckluxvq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'TayNinh', name:'Tây Ninh', src:'https://thoitiet.vn/embed/zprtkluoyk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'LongAn', name:'Long An', src:'https://thoitiet.vn/embed/okqixquzkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BinhPhuoc', name:'Bình Phước', src:'https://thoitiet.vn/embed/qjacywuaxk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BaRia', name:'Bà Rịa - Vũng Tàu', src:'https://thoitiet.vn/embed/mrpfpguvkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'KhanhHoa', name:'Khánh Hòa', src:'https://thoitiet.vn/embed/gyqilguzxv?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'ThanhHoa', name:'Thanh Hóa', src:'https://thoitiet.vn/embed/wvzhpduxgk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'QuangNam', name:'Quảng Nam', src:'https://thoitiet.vn/embed/lzmhwrubyp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'YenBai', name:'Yên Bái', src:'https://thoitiet.vn/embed/pqckbugqa?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'SonLa', name:'Sơn La', src:'https://thoitiet.vn/embed/wzipduxgk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'DienBien', name:'Điện Biên', src:'https://thoitiet.vn/embed/apfgdujwm?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'LaiChau', name:'Lai Châu', src:'https://thoitiet.vn/embed/kjukluxvq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'QuangNgai', name:'Quảng Ngãi', src:'https://thoitiet.vn/embed/ovqsxquzkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'KonTum', name:'Kon Tum', src:'https://thoitiet.vn/embed/ylvhapulmz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BinhDinh', name:'Bình Định', src:'https://thoitiet.vn/embed/voxfypubzd?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'GiaLai', name:'Gia Lai', src:'https://thoitiet.vn/embed/ajpsgdujwm?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'PhuYen', name:'Phú Yên', src:'https://thoitiet.vn/embed/jdduakujaz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'DakLak', name:'Đắk Lắk', src:'https://thoitiet.vn/embed/kdjfkluxvq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'DakNong', name:'Đắk Nông', src:'https://thoitiet.vn/embed/wozupduxgk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'LamDong', name:'Lâm Đồng', src:'https://thoitiet.vn/embed/pjqikbugqa?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BinhDuong', name:'Bình Dương', src:'https://thoitiet.vn/embed/rdohpyuvol?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'DongNai', name:'Đồng Nai', src:'https://thoitiet.vn/embed/dapsrouayq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'NinhThuan', name:'Ninh Thuận', src:'https://thoitiet.vn/embed/xbgcqruwqo?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BinhThuan', name:'Bình Thuận', src:'https://thoitiet.vn/embed/bpjtrzuvxy?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'HoChiMinh', name:'Hồ Chí Minh', src:'https://thoitiet.vn/embed/lxmuwrubyp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'AnGiang', name:'An Giang', src:'https://thoitiet.vn/embed/yyvuapulmz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BacGiang', name:'Bắc Giang', src:'https://thoitiet.vn/embed/mpupguvkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'KienGiang', name:'Kiên Giang', src:'https://thoitiet.vn/embed/aypigdujwm?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'BacNinh', name:'Bắc Ninh', src:'https://thoitiet.vn/embed/vxxtypubzd?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23FF0000&lC=%23dddddd' },
+    { id:'HauGiang', name:'Hậu Giang', src:'https://thoitiet.vn/embed/waztpduxgk?days=5&hC=%23ffffff&hB=%23ff0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'BacLieu', name:'Bạc Liêu', src:'https://thoitiet.vn/embed/qqasywuaxk?days=5&hC=%23ffffff&hB=%23ff0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'CaMau', name:'Cà Mau', src:'https://thoitiet.vn/embed/zdrfkluoyk?days=5&hC=%23ffffff&hB=%23ff0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'DongThap', name:'Đồng Tháp', src:'https://thoitiet.vn/embed/bojfrzuvxy?days=5&hC=%23ffffff&hB=%23ff0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'ThienHue', name:'Thừa Thiên Huế', src:'https://thoitiet.vn/embed/dzpcrouayq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'QuangBinh', name:'Quảng Bình', src:'https://thoitiet.vn/embed/zjrukluoyk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'QuangTri', name:'Quảng Trị', src:'https://thoitiet.vn/embed/rboipyuvol?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'VinhPhuc', name:'Vĩnh Phúc', src:'https://thoitiet.vn/embed/obqcxquzkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:'HaTinh', name:'Hà Tĩnh', src:'https://thoitiet.vn/embed/qpafywuaxk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd' },
+    { id:’NgheAn’, name:’Nghệ An’, src:’https://thoitiet.vn/embed/pbqskbugqa?days=3&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’QuangNinh’, name:’Quảng Ninh’, src:’https://thoitiet.vn/embed/dpfrouayq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’NinhBinh’, name:’Ninh Bình’, src:’https://thoitiet.vn/embed/kmjtkluxvq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’NamDinh’, name:’Nam Định’, src:’https://thoitiet.vn/embed/aqpcgdujwm?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’ThaiBinh’, name:’Thái Bình’, src:’https://thoitiet.vn/embed/bzjurzuvxy?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HaiDuong’, name:’Hải Dương’, src:’https://thoitiet.vn/embed/jpdhakujaz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HungYen’, name:’Hưng Yên’, src:’https://thoitiet.vn/embed/dpfrouayq?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HaNam’, name:’Hà Nam’, src:’https://thoitiet.vn/embed/ygviapulmz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HoaBinh’, name:’Hoà Bình’, src:’https://thoitiet.vn/embed/qatywuaxk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’PhuTho’, name:’Phú Thọ’, src:’hhttps://thoitiet.vn/embed/lmiwrubyp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’BacKan’, name:’Bắc Kạn’, src:’https://thoitiet.vn/embed/xgtqruwqo?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’LangSon’, name:’Lạng Sơn’, src:’https://thoitiet.vn/embed/rospyuvol?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’ThaiNguyen’, name:’Thái Nguyên’, src:’https://thoitiet.vn/embed/zrhkluoyk?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’LaoCai’, name:’Lào Cai’, src:’https://thoitiet.vn/embed/yvsapulmz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’TuyenQuang’, name:’Tuyên Quang’, src:’https://thoitiet.vn/embed/bjhrzuvxy?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’CaoBang’, name:’Cao Bằng’, src:’https://thoitiet.vn/embed/gqclguzxv?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HaGiang’, name:’Hà Giang’, src:’https://thoitiet.vn/embed/jdiakujaz?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’DaNang’, name:’Đà Nẵng’, src:’https://thoitiet.vn/embed/mlptpguvkp?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+    { id:’HaiPhong’, name:’Hải Phòng’, src:’https://thoitiet.vn/embed/gaqslguzxv?days=5&hC=%23ffffff&hB=%23FF0000&tC=%23848484&bC=%23000000&lC=%23dddddd’ },
+ ];
+
+// Populate dropdown
+const select = document.getElementById('province-select');
+regions.forEach(r=>{
+    const opt = document.createElement('option');
+    opt.value = r.src;
+    opt.textContent = r.name;
+    select.appendChild(opt);
 });
 
-// Giờ & ngày
+// Load default weather
+const widget = document.getElementById('weather-widget');
+widget.src = regions[0].src;
+
+select.addEventListener('change', ()=>{
+    widget.src = select.value;
+});
+
+// Hiển thị giờ & ngày
 function updateTime() {
     const now = new Date();
     document.getElementById('time').textContent = now.toLocaleTimeString('vi-VN', { hour12:false });
@@ -167,44 +163,61 @@ themeBtn.addEventListener('click', ()=>{
     document.body.classList.toggle('light');
 });
 
-// Âm thanh
+// Âm thanh nền
 let currentAudio = null;
-let soundEnabled = false;
-document.querySelectorAll('.sound-controls button[data-sound]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
+document.querySelectorAll('.sound-controls button[data-sound]').forEach(btn => {
+    btn.addEventListener('click', () => {
         const sound = btn.dataset.sound;
         if(currentAudio) currentAudio.pause();
         currentAudio = new Audio(`sounds/${sound}.mp3`);
         currentAudio.loop = true;
-        currentAudio.muted = !soundEnabled;
-        currentAudio.play();
     });
 });
-document.getElementById('toggle-sound').addEventListener('click', ()=>{
-    soundEnabled = !soundEnabled;
-    if(currentAudio) currentAudio.muted = !soundEnabled;
-});
+document.getElementById('stop-sound').addEventListener('click', ()=>{ if(currentAudio) currentAudio.pause(); });
 
 // AI Chat
 const chatBox = document.getElementById('chat-box');
 const chatInput = document.getElementById('chat-input');
 const chatSend = document.getElementById('chat-send');
-function appendMessage(text, type='ai'){
-    const msg = document.createElement('div');
-    msg.className = `chat-message ${type==='user'?'chat-user':'chat-ai'}`;
-    msg.textContent = text;
-    chatBox.appendChild(msg);
+
+async function getAIResponse(question){
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(question)}`;
+    try{
+        const res = await fetch(url);
+        if(res.ok){
+            const data = await res.json();
+            return data.extract || "Mình chưa tìm thấy thông tin.";
+        } else {
+            return "Mình không tìm thấy thông tin.";
+        }
+    } catch(e){
+        return "Lỗi khi truy xuất dữ liệu.";
+    }
+}
+
+async function sendMessage(){
+    const msg = chatInput.value.trim();
+    if(!msg) return;
+    chatBox.innerHTML += `<div><b>Bạn:</b> ${msg}</div>`;
+    chatInput.value = '';
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    let response = '';
+    // Nếu hỏi về thời tiết
+    const weatherRegex = /thời tiết|nhiệt độ|mưa|nắng/i;
+    if(weatherRegex.test(msg)){
+        const province = select.options[select.selectedIndex].textContent;
+        response = `Thời tiết ${province} xem ở widget phía trên nhé!`;
+    } else {
+        response = await getAIResponse(msg);
+    }
+    chatBox.innerHTML += `<div><b>AI:</b> ${response}</div>`;
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-chatSend.addEventListener('click', ()=>{
-    const text = chatInput.value.trim();
-    if(!text) return;
-    appendMessage(text, 'user');
-    chatInput.value='';
-    setTimeout(()=>{ appendMessage('AI trả lời: "'+text+'"','ai'); }, 500);
-});
+
+chatSend.addEventListener('click', sendMessage);
 chatInput.addEventListener('keypress', e=>{
-    if(e.key==='Enter') chatSend.click();
+    if(e.key === 'Enter') sendMessage();
 });
 </script>
 </body>
