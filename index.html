@@ -8,8 +8,8 @@
   body {
     font-family: "Segoe UI", Arial, sans-serif;
     margin: 0; padding: 0;
-    background: #f5f5f5;
-    color: #222;
+    background: #ffffff;
+    color: #000;
     transition: background 0.3s, color 0.3s;
   }
   body.dark-mode {
@@ -45,11 +45,9 @@
     padding: 10px;
     margin: 8px 5px;
     border-radius: 5px;
-    border: none;
+    border: 1px solid #ccc;
     font-size: 15px;
-  }
-  input {
-    width: 220px;
+    color: #000;
   }
   button {
     background: #FF0000;
@@ -69,7 +67,7 @@
   #weatherWidget {
     height: 520px;
   }
-  #windyMap {
+  #windyMap, #satelliteMap {
     height: 600px;
     margin-top: 40px;
   }
@@ -95,13 +93,18 @@
 
   <iframe id="weatherWidget" src=""></iframe>
 
-  <h2>🗺️ Bản đồ thời tiết Việt Nam / Vietnam Weather Map</h2>
+  <h2>🗺️ Bản đồ gió và thời tiết Việt Nam / Vietnam Wind Map</h2>
   <iframe id="windyMap"
-    src="https://embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=wind&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default&radarRange=-1"
-    </iframe>
+    src="https://embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=wind&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default">
+  </iframe>
+
+  <h2>🛰️ Bản đồ vệ tinh trực tuyến / Live Satellite Map</h2>
+  <iframe id="satelliteMap"
+    src="https://embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=satellite&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default">
+  </iframe>
 </div>
-  <script>
-/* Danh sách 63 tỉnh/thành Việt Nam - hiển thị chữ đen rõ ràng */
+<script>
+// ===== DANH SÁCH 63 TỈNH/THÀNH VIỆT NAM =====
 const provinces = [
   {id:'HaNoi', name:'Hà Nội / Hanoi', src:'https://thoitietvn.edu.vn/iframe?term=vxuypubzd&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'},
   {id:'HoChiMinh', name:'TP. Hồ Chí Minh / Ho Chi Minh City', src:'https://thoitietvn.edu.vn/iframe?term=dopirouayq&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'},
@@ -167,13 +170,14 @@ const provinces = [
   {id:'VinhPhuc', name:'Vĩnh Phúc / Vinh Phuc', src:'https://thoitietvn.edu.vn/iframe?term=xgmnltwzdr&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'},
   {id:'YenBai', name:'Yên Bái / Yen Bai', src:'https://thoitietvn.edu.vn/iframe?term=nmktwrfyzp&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'}
 ];
-  </script>
-
-   // ----- Hiển thị danh sách tỉnh -----
+   </script>
+   <script>
+// ======== CÀI ĐẶT CÁC PHẦN CHÍNH ========
 const select = document.getElementById('provinceSelect');
 const widget = document.getElementById('weatherWidget');
 const searchInput = document.getElementById('searchInput');
 
+// ======== HIỂN THỊ DANH SÁCH TỈNH ========
 function loadProvinces() {
   provinces.forEach(p => {
     const option = document.createElement('option');
@@ -181,50 +185,49 @@ function loadProvinces() {
     option.textContent = p.name;
     select.appendChild(option);
   });
-  // Mặc định: Hà Nội
-  widget.src = provinces[0].src;
+  widget.src = provinces[0].src; // Mặc định: Hà Nội
   select.value = provinces[0].id;
 }
 loadProvinces();
 
-// ----- Đổi tỉnh -----
+// ======== ĐỔI TỈNH KHI CHỌN ========
 select.addEventListener('change', () => {
   const selected = provinces.find(p => p.id === select.value);
-  widget.src = selected.src;
+  if (selected) widget.src = selected.src;
 });
 
-// ----- Tìm kiếm tỉnh -----
+// ======== TÌM KIẾM ========
 searchInput.addEventListener('input', e => {
-  const keyword = e.target.value.toLowerCase();
+  const keyword = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   select.innerHTML = '';
-  provinces
-    .filter(p => p.name.toLowerCase().includes(keyword))
-    .forEach(p => {
-      const option = document.createElement('option');
-      option.value = p.id;
-      option.textContent = p.name;
-      select.appendChild(option);
-    });
+  provinces.filter(p => {
+    const name = p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return name.includes(keyword);
+  }).forEach(p => {
+    const option = document.createElement('option');
+    option.value = p.id;
+    option.textContent = p.name;
+    select.appendChild(option);
+  });
 });
 
-// ----- Cập nhật ngày & giờ Việt Nam -----
+// ======== ĐỒNG HỒ GIỜ VIỆT NAM ========
 function updateTime() {
   const now = new Date();
   const options = { timeZone: 'Asia/Ho_Chi_Minh', hour12: false };
-  const date = now.toLocaleDateString('vi-VN', options);
   const time = now.toLocaleTimeString('vi-VN', options);
+  const date = now.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
   document.getElementById('datetime').textContent = `🕒 ${time} - ${date} (Giờ Việt Nam / Vietnam Time)`;
 }
 setInterval(updateTime, 1000);
 updateTime();
 
-// ----- Chế độ tối / sáng -----
+// ======== NÚT DARK / LIGHT MODE ========
 const toggleBtn = document.getElementById('toggleTheme');
 toggleBtn.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');
-  toggleBtn.textContent = document.body.classList.contains('dark-mode')
-    ? '☀️ Chế độ sáng / Light Mode'
-    : '🌙 Chế độ tối / Dark Mode';
+  const dark = document.body.classList.contains('dark-mode');
+  toggleBtn.textContent = dark ? '☀️ Chế độ sáng / Light Mode' : '🌙 Chế độ tối / Dark Mode';
 });
 </script>
 </body>
