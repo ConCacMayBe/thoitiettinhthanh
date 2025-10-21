@@ -3,193 +3,225 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thời tiết Việt Nam</title>
+<title>☀️ Thời tiết Việt Nam - Weather in Vietnam</title>
 <style>
-:root {
-    --bg-light: #e0f7fa;
-    --bg-dark: #121212;
-    --text-light: #000;
-    --text-dark: #fff;
-}
-body { font-family: 'Segoe UI', sans-serif; margin:0; padding:0; transition:0.3s;}
-body.light { background-color: var(--bg-light); color: var(--text-light); }
-body.dark { background-color: var(--bg-dark); color: var(--text-dark); }
-
-.container { max-width: 1200px; margin:0 auto; padding:20px;}
-header { text-align:center; margin-bottom:20px;}
-header h1 { margin-bottom:10px; }
-.datetime { font-size:1.1em; margin-bottom:10px; }
-button { padding:10px 15px; margin:5px; border:none; border-radius:10px; cursor:pointer;}
-button:hover{opacity:0.8;}
-
-.weather-container { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
-.weather-card { flex:1 1 250px; background:rgba(255,255,255,0.2); backdrop-filter:blur(10px); padding:15px; border-radius:15px; text-align:center; min-width:220px; position:relative; cursor:pointer; transition:0.3s; }
-.weather-card:hover { transform:scale(1.05); }
-.tooltip { visibility:hidden; background-color:rgba(0,0,0,0.8); color:#fff; text-align:left; border-radius:6px; padding:10px; position:absolute; z-index:1; bottom:110%; left:50%; transform:translateX(-50%); width:200px; opacity:0; transition:opacity 0.3s; }
-.weather-card:hover .tooltip { visibility:visible; opacity:1; }
-
-.chat-container { max-width:600px; margin:20px auto; border:1px solid #ccc; border-radius:10px; padding:15px; background:rgba(255,255,255,0.1); }
-.chat-log { max-height:300px; overflow-y:auto; margin-bottom:10px; }
-.chat-message { margin:5px 0; }
-.chat-message.user { text-align:right; font-weight:bold; }
-.chat-message.ai { text-align:left; color:blue; }
-input[type="text"] { width:calc(100% - 100px); padding:10px; border-radius:10px; border:1px solid #ccc; }
-input[type="submit"] { padding:10px 15px; border-radius:10px; border:none; background-color:#0288d1; color:white; cursor:pointer; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f5f5f5;
+    color: #222;
+    transition: background 0.3s, color 0.3s;
+  }
+  body.dark-mode {
+    background: #121212;
+    color: #fff;
+  }
+  header {
+    background: #FF0000;
+    color: #fff;
+    padding: 20px 10px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 26px;
+  }
+  header p {
+    margin: 5px 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  .container {
+    max-width: 1000px;
+    margin: auto;
+    padding: 20px;
+    text-align: center;
+  }
+  #datetime {
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  input, select, button {
+    padding: 10px;
+    margin: 8px 5px;
+    border-radius: 5px;
+    border: none;
+    font-size: 15px;
+  }
+  input {
+    width: 220px;
+  }
+  button {
+    background: #FF0000;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+  iframe {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    margin-top: 15px;
+  }
+  #weatherWidget {
+    height: 520px;
+  }
+  #windyMap {
+    height: 600px;
+    margin-top: 40px;
+  }
+  @media (max-width: 600px) {
+    input, select, button {
+      width: 95%;
+      margin-bottom: 10px;
+    }
+  }
 </style>
 </head>
 <body>
+<header>
+  <h1>☀️ Thời tiết Việt Nam - Weather in Vietnam</h1>
+  <p>Dự báo 7 ngày cho 63 tỉnh thành | 7-Day Forecast for 63 Provinces</p>
+</header>
+
 <div class="container">
-    <header>
-        <h1>Thời tiết Việt Nam</h1>
-        <div class="datetime">
-            <span id="time"></span> | <span id="date"></span>
-        </div>
-        <button id="theme-toggle">Chế độ tối/sáng</button>
-    </header>
+  <div id="datetime"></div>
+  <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm tỉnh / Search province...">
+  <select id="provinceSelect"></select>
+  <button id="toggleTheme">🌓 Chế độ tối / sáng - Dark / Light</button>
 
-    <main>
-        <h2>Dashboard thời tiết 63 tỉnh</h2>
-        <div class="weather-container" id="weather-container">
-            <!-- Thời tiết 63 tỉnh sẽ hiển thị ở đây -->
-        </div>
+  <iframe id="weatherWidget" src=""></iframe>
 
-        <div class="chat-container">
-            <h2>AI Chat</h2>
-            <div class="chat-log" id="chat-log"></div>
-            <form id="chat-form">
-                <input type="text" id="chat-input" placeholder="Hỏi AI về thời tiết...">
-                <input type="submit" value="Gửi">
-            </form>
-        </div>
-    </main>
+  <h2>🗺️ Bản đồ thời tiết Việt Nam / Vietnam Weather Map</h2>
+  <iframe id="windyMap"
+    src="https://embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=wind&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default&radarRange=-1">
+  </iframe>
 </div>
-
 <script>
-// Danh sách 63 tỉnh Việt Nam
-const regions = [
-    { id:'HaGiang', name:'Hà Giang' },{ id:'CaoBang', name:'Cao Bằng' },{ id:'BacKan', name:'Bắc Kạn' },
-    { id:'TuyenQuang', name:'Tuyên Quang' },{ id:'LaoCai', name:'Lào Cai' },{ id:'DienBien', name:'Điện Biên' },
-    { id:'LaiChau', name:'Lai Châu' },{ id:'SonLa', name:'Sơn La' },{ id:'YenBai', name:'Yên Bái' },
-    { id:'HoaBinh', name:'Hoà Bình' },{ id:'ThaiNguyen', name:'Thái Nguyên' },{ id:'LangSon', name:'Lạng Sơn' },
-    { id:'BacGiang', name:'Bắc Giang' },{ id:'PhuTho', name:'Phú Thọ' },{ id:'VinhPhuc', name:'Vĩnh Phúc' },
-    { id:'BacNinh', name:'Bắc Ninh' },{ id:'HaNam', name:'Hà Nam' },{ id:'NamDinh', name:'Nam Định' },
-    { id:'ThaiBinh', name:'Thái Bình' },{ id:'NinhBinh', name:'Ninh Bình' },{ id:'HaNoi', name:'Hà Nội' },
-    { id:'HaiPhong', name:'Hải Phòng' },{ id:'QuangNinh', name:'Quảng Ninh' },{ id:'HaiDuong', name:'Hải Dương' },
-    { id:'HungYen', name:'Hưng Yên' },{ id:'ThanhHoa', name:'Thanh Hóa' },{ id:'NgheAn', name:'Nghệ An' },
-    { id:'HaTinh', name:'Hà Tĩnh' },{ id:'QuangBinh', name:'Quảng Bình' },{ id:'QuangTri', name:'Quảng Trị' },
-    { id:'ThuaThienHue', name:'Thừa Thiên Huế' },{ id:'DaNang', name:'Đà Nẵng' },{ id:'QuangNam', name:'Quảng Nam' },
-    { id:'QuangNgai', name:'Quảng Ngãi' },{ id:'BinhDinh', name:'Bình Định' },{ id:'PhuYen', name:'Phú Yên' },
-    { id:'KhanhHoa', name:'Khánh Hòa' },{ id:'GiaLai', name:'Gia Lai' },{ id:'KonTum', name:'Kon Tum' },
-    { id:'LamDong', name:'Lâm Đồng' },{ id:'BinhPhuoc', name:'Bình Phước' },{ id:'BinhDuong', name:'Bình Dương' },
-    { id:'DongNai', name:'Đồng Nai' },{ id:'TayNinh', name:'Tây Ninh' },{ id:'BaRia', name:'Bà Rịa - Vũng Tàu' },
-    { id:'HoChiMinh', name:'Hồ Chí Minh' },{ id:'LongAn', name:'Long An' },{ id:'DacLac', name:'Đắk Lắk' },
-    { id:'DakNong', name:'Đắk Nông' },{ id:'TienGiang', name:'Tiền Giang' },{ id:'BenTre', name:'Bến Tre' },
-    { id:'VinhLong', name:'Vĩnh Long' },{ id:'TraVinh', name:'Trà Vinh' },{ id:'SocTrang', name:'Sóc Trăng' },
-    { id:'BacLieu', name:'Bạc Liêu' },{ id:'CaMau', name:'Cà Mau' },{ id:'CanTho', name:'Cần Thơ' },
-    { id:'HauGiang', name:'Hậu Giang' }
+const provinces = [
+  {id:'HaNoi', name:'Hà Nội / Hanoi', src:'https://thoitietvn.edu.vn/iframe?term=1&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HoChiMinh', name:'TP. Hồ Chí Minh / Ho Chi Minh City', src:'https://thoitietvn.edu.vn/iframe?term=2&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HaiPhong', name:'Hải Phòng / Hai Phong', src:'https://thoitietvn.edu.vn/iframe?term=3&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DaNang', name:'Đà Nẵng / Da Nang', src:'https://thoitietvn.edu.vn/iframe?term=4&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'CanTho', name:'Cần Thơ / Can Tho', src:'https://thoitietvn.edu.vn/iframe?term=5&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'AnGiang', name:'An Giang', src:'https://thoitietvn.edu.vn/iframe?term=6&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BaRiaVungTau', name:'Bà Rịa – Vũng Tàu / Ba Ria - Vung Tau', src:'https://thoitietvn.edu.vn/iframe?term=7&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BacGiang', name:'Bắc Giang / Bac Giang', src:'https://thoitietvn.edu.vn/iframe?term=8&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BacKan', name:'Bắc Kạn / Bac Kan', src:'https://thoitietvn.edu.vn/iframe?term=9&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BacLieu', name:'Bạc Liêu / Bac Lieu', src:'https://thoitietvn.edu.vn/iframe?term=10&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BacNinh', name:'Bắc Ninh / Bac Ninh', src:'https://thoitietvn.edu.vn/iframe?term=11&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BenTre', name:'Bến Tre / Ben Tre', src:'https://thoitietvn.edu.vn/iframe?term=12&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BinhDinh', name:'Bình Định / Binh Dinh', src:'https://thoitietvn.edu.vn/iframe?term=13&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BinhDuong', name:'Bình Dương / Binh Duong', src:'https://thoitietvn.edu.vn/iframe?term=14&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BinhPhuoc', name:'Bình Phước / Binh Phuoc', src:'https://thoitietvn.edu.vn/iframe?term=15&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'BinhThuan', name:'Bình Thuận / Binh Thuan', src:'https://thoitietvn.edu.vn/iframe?term=16&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'CaMau', name:'Cà Mau / Ca Mau', src:'https://thoitietvn.edu.vn/iframe?term=17&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'CaoBang', name:'Cao Bằng / Cao Bang', src:'https://thoitietvn.edu.vn/iframe?term=18&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DakLak', name:'Đắk Lắk / Dak Lak', src:'https://thoitietvn.edu.vn/iframe?term=19&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DakNong', name:'Đắk Nông / Dak Nong', src:'https://thoitietvn.edu.vn/iframe?term=20&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DienBien', name:'Điện Biên / Dien Bien', src:'https://thoitietvn.edu.vn/iframe?term=21&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DongNai', name:'Đồng Nai / Dong Nai', src:'https://thoitietvn.edu.vn/iframe?term=22&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'DongThap', name:'Đồng Tháp / Dong Thap', src:'https://thoitietvn.edu.vn/iframe?term=23&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'GiaLai', name:'Gia Lai', src:'https://thoitietvn.edu.vn/iframe?term=24&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HaGiang', name:'Hà Giang / Ha Giang', src:'https://thoitietvn.edu.vn/iframe?term=25&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HaNam', name:'Hà Nam / Ha Nam', src:'https://thoitietvn.edu.vn/iframe?term=26&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HaTinh', name:'Hà Tĩnh / Ha Tinh', src:'https://thoitietvn.edu.vn/iframe?term=27&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HaiDuong', name:'Hải Dương / Hai Duong', src:'https://thoitietvn.edu.vn/iframe?term=28&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HauGiang', name:'Hậu Giang / Hau Giang', src:'https://thoitietvn.edu.vn/iframe?term=29&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HoaBinh', name:'Hòa Bình / Hoa Binh', src:'https://thoitietvn.edu.vn/iframe?term=30&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'HungYen', name:'Hưng Yên / Hung Yen', src:'https://thoitietvn.edu.vn/iframe?term=31&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'KhanhHoa', name:'Khánh Hòa / Khanh Hoa', src:'https://thoitietvn.edu.vn/iframe?term=32&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'KienGiang', name:'Kiên Giang / Kien Giang', src:'https://thoitietvn.edu.vn/iframe?term=33&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'KonTum', name:'Kon Tum', src:'https://thoitietvn.edu.vn/iframe?term=34&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'LaiChau', name:'Lai Châu / Lai Chau', src:'https://thoitietvn.edu.vn/iframe?term=35&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'LamDong', name:'Lâm Đồng / Lam Dong', src:'https://thoitietvn.edu.vn/iframe?term=36&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'LangSon', name:'Lạng Sơn / Lang Son', src:'https://thoitietvn.edu.vn/iframe?term=37&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'LaoCai', name:'Lào Cai / Lao Cai', src:'https://thoitietvn.edu.vn/iframe?term=38&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'LongAn', name:'Long An', src:'https://thoitietvn.edu.vn/iframe?term=39&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'NamDinh', name:'Nam Định / Nam Dinh', src:'https://thoitietvn.edu.vn/iframe?term=40&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'NgheAn', name:'Nghệ An / Nghe An', src:'https://thoitietvn.edu.vn/iframe?term=41&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'NinhBinh', name:'Ninh Bình / Ninh Binh', src:'https://thoitietvn.edu.vn/iframe?term=42&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'NinhThuan', name:'Ninh Thuận / Ninh Thuan', src:'https://thoitietvn.edu.vn/iframe?term=43&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'PhuTho', name:'Phú Thọ / Phu Tho', src:'https://thoitietvn.edu.vn/iframe?term=44&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'PhuYen', name:'Phú Yên / Phu Yen', src:'https://thoitietvn.edu.vn/iframe?term=45&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'QuangBinh', name:'Quảng Bình / Quang Binh', src:'https://thoitietvn.edu.vn/iframe?term=46&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'QuangNam', name:'Quảng Nam / Quang Nam', src:'https://thoitietvn.edu.vn/iframe?term=47&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'QuangNgai', name:'Quảng Ngãi / Quang Ngai', src:'https://thoitietvn.edu.vn/iframe?term=48&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'QuangNinh', name:'Quảng Ninh / Quang Ninh', src:'https://thoitietvn.edu.vn/iframe?term=49&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'QuangTri', name:'Quảng Trị / Quang Tri', src:'https://thoitietvn.edu.vn/iframe?term=50&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'SocTrang', name:'Sóc Trăng / Soc Trang', src:'https://thoitietvn.edu.vn/iframe?term=51&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'SonLa', name:'Sơn La / Son La', src:'https://thoitietvn.edu.vn/iframe?term=52&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'TayNinh', name:'Tây Ninh / Tay Ninh', src:'https://thoitietvn.edu.vn/iframe?term=53&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'ThaiBinh', name:'Thái Bình / Thai Binh', src:'https://thoitietvn.edu.vn/iframe?term=54&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'ThaiNguyen', name:'Thái Nguyên / Thai Nguyen', src:'https://thoitietvn.edu.vn/iframe?term=55&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'ThanhHoa', name:'Thanh Hóa / Thanh Hoa', src:'https://thoitietvn.edu.vn/iframe?term=56&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'ThuaThienHue', name:'Thừa Thiên Huế / Thua Thien Hue', src:'https://thoitietvn.edu.vn/iframe?term=57&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'TienGiang', name:'Tiền Giang / Tien Giang', src:'https://thoitietvn.edu.vn/iframe?term=58&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'TraVinh', name:'Trà Vinh / Tra Vinh', src:'https://thoitietvn.edu.vn/iframe?term=59&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'TuyenQuang', name:'Tuyên Quang / Tuyen Quang', src:'https://thoitietvn.edu.vn/iframe?term=60&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'VinhLong', name:'Vĩnh Long / Vinh Long', src:'https://thoitietvn.edu.vn/iframe?term=61&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'VinhPhuc', name:'Vĩnh Phúc / Vinh Phuc', src:'https://thoitietvn.edu.vn/iframe?term=62&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
+  {id:'YenBai', name:'Yên Bái / Yen Bai', src:'https://thoitietvn.edu.vn/iframe?term=63&days=7&hC=%23ffffff&hB=%23000000&bC=%23000000&tC=%23ffffff&lC=%23ffffff'},
 ];
+   // ----- Hiển thị danh sách tỉnh -----
+const select = document.getElementById('provinceSelect');
+const widget = document.getElementById('weatherWidget');
+const searchInput = document.getElementById('searchInput');
 
-// Hiển thị giờ & ngày
+function loadProvinces() {
+  provinces.forEach(p => {
+    const option = document.createElement('option');
+    option.value = p.id;
+    option.textContent = p.name;
+    select.appendChild(option);
+  });
+  // Mặc định: Hà Nội
+  widget.src = provinces[0].src;
+  select.value = provinces[0].id;
+}
+loadProvinces();
+
+// ----- Đổi tỉnh -----
+select.addEventListener('change', () => {
+  const selected = provinces.find(p => p.id === select.value);
+  widget.src = selected.src;
+});
+
+// ----- Tìm kiếm tỉnh -----
+searchInput.addEventListener('input', e => {
+  const keyword = e.target.value.toLowerCase();
+  select.innerHTML = '';
+  provinces
+    .filter(p => p.name.toLowerCase().includes(keyword))
+    .forEach(p => {
+      const option = document.createElement('option');
+      option.value = p.id;
+      option.textContent = p.name;
+      select.appendChild(option);
+    });
+});
+
+// ----- Cập nhật ngày & giờ Việt Nam -----
 function updateTime() {
-    const now = new Date();
-    document.getElementById('time').textContent = now.toLocaleTimeString('vi-VN', { hour12:false });
-    document.getElementById('date').textContent = now.toLocaleDateString('vi-VN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const now = new Date();
+  const options = { timeZone: 'Asia/Ho_Chi_Minh', hour12: false };
+  const date = now.toLocaleDateString('vi-VN', options);
+  const time = now.toLocaleTimeString('vi-VN', options);
+  document.getElementById('datetime').textContent = `🕒 ${time} - ${date} (Giờ Việt Nam / Vietnam Time)`;
 }
 setInterval(updateTime, 1000);
 updateTime();
 
-// Chế độ tối/sáng
-const themeBtn = document.getElementById('theme-toggle');
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-document.body.classList.add(prefersDark ? 'dark' : 'light');
-themeBtn.addEventListener('click', ()=>{
-    document.body.classList.toggle('dark');
-    document.body.classList.toggle('light');
-});
-
-// OpenWeatherMap API
-const apiKey = '7c134b8da09dda074780ea5d1d1847be'; // Thay bằng key thật
-const weatherContainer = document.getElementById('weather-container');
-
-async function fetchWeather(region) {
-    try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${region.name},VN&units=metric&lang=vi&appid=${apiKey}`);
-        const data = await res.json();
-        if (data.cod !== 200) return { text: `${region.name}: Không có dữ liệu`, details: '' };
-        const text = `${region.name}: ${data.main.temp}°C, ${data.weather[0].description}`;
-        const details = `Độ ẩm: ${data.main.humidity}%\nGió: ${data.wind.speed} m/s\nĐộ sương: ${data.main.feels_like}°C`;
-        return { text, details };
-    } catch(e){
-        return { text: `${region.name}: Lỗi khi lấy dữ liệu`, details:'' };
-    }
-}
-
-// Hiển thị dashboard thời tiết
-async function loadWeatherDashboard() {
-    weatherContainer.innerHTML = 'Đang tải dữ liệu...';
-    const weatherPromises = regions.map(r => fetchWeather(r));
-    const results = await Promise.all(weatherPromises);
-    weatherContainer.innerHTML = '';
-    results.forEach(result=>{
-        const card = document.createElement('div');
-        card.className = 'weather-card';
-        card.textContent = result.text;
-
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        tooltip.textContent = result.details;
-        card.appendChild(tooltip);
-
-        weatherContainer.appendChild(card);
-    });
-}
-loadWeatherDashboard();
-setInterval(loadWeatherDashboard, 10*60*1000); // 10 phút 1 lần
-
-// AI Chat
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('chat-input');
-const chatLog = document.getElementById('chat-log');
-
-async function getWeather(city) {
-    try {
-        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},VN&units=metric&lang=vi&appid=${apiKey}`);
-        const data = await res.json();
-        if (data.cod !== 200) return `Không tìm thấy dữ liệu thời tiết cho ${city}`;
-        return `Thời tiết ${city} hiện tại: ${data.main.temp}°C, ${data.weather[0].description}, độ ẩm ${data.main.humidity}%, gió ${data.wind.speed} m/s, độ sương ${data.main.feels_like}°C.`;
-    } catch (e) {
-        return 'Có lỗi khi lấy dữ liệu thời tiết.';
-    }
-}
-
-chatForm.addEventListener('submit', async e=>{
-    e.preventDefault();
-    const userText = chatInput.value.trim();
-    if(!userText) return;
-    const userMessage = document.createElement('div');
-    userMessage.className = 'chat-message user';
-    userMessage.textContent = userText;
-    chatLog.appendChild(userMessage);
-
-    let aiReply = '';
-    const forbidden = ['bậy','sex','lồn','cặc','địt','xxx','fuck'];
-    if(forbidden.some(f=>userText.toLowerCase().includes(f))){
-        aiReply = 'Xin lỗi, tôi không thể trả lời câu hỏi nhạy cảm.';
-    } else {
-        const foundRegion = regions.find(r=>userText.toLowerCase().includes(r.name.toLowerCase()));
-        if(foundRegion){
-            aiReply = await getWeather(foundRegion.name);
-        } else {
-            aiReply = 'Xin vui lòng hỏi về thời tiết của một tỉnh ở Việt Nam.';
-        }
-    }
-
-    const aiMessage = document.createElement('div');
-    aiMessage.className = 'chat-message ai';
-    aiMessage.textContent = aiReply;
-    chatLog.appendChild(aiMessage);
-    chatInput.value='';
-    chatLog.scrollTop = chatLog.scrollHeight;
+// ----- Chế độ tối / sáng -----
+const toggleBtn = document.getElementById('toggleTheme');
+toggleBtn.addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  toggleBtn.textContent = document.body.classList.contains('dark-mode')
+    ? '☀️ Chế độ sáng / Light Mode'
+    : '🌙 Chế độ tối / Dark Mode';
 });
 </script>
 </body>
