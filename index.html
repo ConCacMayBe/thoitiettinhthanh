@@ -97,7 +97,10 @@
 
   <h2>🗺️ Bản đồ thời tiết Việt Nam / Vietnam Weather Map</h2>
   <iframe id="windyMap"
-    src="https:<script>
+    src="https://embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=wind&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default&radarRange=-1"
+    </iframe>
+</div>
+  <script>
 /* Danh sách 63 tỉnh/thành Việt Nam - hiển thị chữ đen rõ ràng */
 const provinces = [
   {id:'HaNoi', name:'Hà Nội / Hanoi', src:'https://thoitietvn.edu.vn/iframe?term=vxuypubzd&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'},
@@ -164,9 +167,7 @@ const provinces = [
   {id:'VinhPhuc', name:'Vĩnh Phúc / Vinh Phuc', src:'https://thoitietvn.edu.vn/iframe?term=xgmnltwzdr&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'},
   {id:'YenBai', name:'Yên Bái / Yen Bai', src:'https://thoitietvn.edu.vn/iframe?term=nmktwrfyzp&days=7&hC=%23000000&hB=%23ffffff&bC=%23ffffff&tC=%23000000&lC=%23000000'}
 ];
-//embed.windy.com/embed2.html?lat=15.8&lon=106.6&zoom=5&level=surface&overlay=wind&menu=&message=&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=&detailLon=&metricWind=default&metricTemp=default&radarRange=-1">
-  </iframe>
-</div>
+  </script>
 
    // ----- Hiển thị danh sách tỉnh -----
 const select = document.getElementById('provinceSelect');
